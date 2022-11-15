@@ -33,25 +33,56 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Problem 1
 
-```{r}
+#### Import data using `list.files`
+
+```{r, message = FALSE}
 long_study_df =
   tibble(
-    file_names = list.files(path = "data", all.files = TRUE, no.. = TRUE)
-  ) 
-
-  # mutate(
-  #   data = purrr::map(long_study_df[["file_names"]], read.csv("data/"))
-  # )
-
+    file_names = list.files(path = "data/problem_1/", all.files = TRUE, no.. = TRUE),
+    path = str_c("data/problem_1/", file_names)
+  ) %>% 
+  mutate(data = map(path, read_csv)) %>% 
+  unnest(cols = c(data))
 ```
+
+
+#### Tidy data
+
+```{r}
+tidy_long_df = 
+  long_study_df %>% 
+  mutate(
+    files = str_replace(file_names, ".csv", ""),
+    group = str_sub(files, 1, 3)) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "outcome",
+    names_prefix = "week_") %>% 
+  mutate(week = as.numeric(week)) %>%
+  select(group, subject = files, week, outcome)
+```
+
+#### Plot showing observations on each subject over time
+
+```{r}
+tidy_long_df %>% 
+  ggplot(aes(x = week, y = outcome, group = subject, color = group)) + 
+  geom_point() + 
+  geom_path() + 
+  facet_grid(~group)
+```
+
+There appears to be a positive trend in the experimental group where outcome values increase as time passes. This trend is not observed or is not as apparent in the control group. Additionally, the values in Week 8 are higher in the experimental group compared to the control, while values were similar in both groups in Week 1. 
 
 
 ## Problem 2
 
-```{r}
+#### Importing and describing the data
+```{r, message = FALSE}
 homicide_df <- 
   read_csv(
-    'data/homicide-data.csv') %>%  
+    'data/problem_2/homicide-data.csv') %>%  
   janitor::clean_names()
 ```
 
@@ -60,58 +91,99 @@ Describe the raw data. Create a city_state variable (e.g. “Baltimore, MD”) a
 Describe the Data: ***need to do***
 
 
+#### Summarizing total number of homicides and number of unsolved homicides
 
 ```{r}
-homicide_summ <- 
+homicide_summary <- 
   homicide_df %>% 
   mutate(
     city_state = str_c(city, sep = ", ", state),
-    num_homicide = ifelse(disposition == "Closed by arrest", "homicide_n", "unsolved_n")
   ) %>% 
-  group_by(city_state, num_homicide) %>% 
+  group_by(city_state) %>% 
   summarise(
-    n_obs = n()
+    n_homs = n(),
+    n_unsolved = sum(disposition == "Closed without arrest" | disposition == "Open/No arrest")
   )
 ```
 
-#### Estimating Proportions of Unsolved Homicides: Running `prop.test` for Baltimore, MD
+
+#### Estimating proportions of unsolved homicides: Running `prop.test` for Baltimore, MD
 
 For the city of Baltimore, MD, use the `prop.test` function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
 
 ```{r}
-baltimore_hom <- homicide_summ %>% 
-  filter(city_state == "Baltimore, MD") %>% 
+baltimore_hom <-
+  homicide_summary %>% 
+  filter(city_state == "Baltimore, MD")
+
+baltimore_prop <-
+  prop.test(
+    x = baltimore_hom %>% 
+      pull(n_unsolved), 
+    n = baltimore_hom %>% 
+      pull(n_homs)
+  ) %>% 
+  broom::tidy()
+
+baltimore_hom <-
+  baltimore_hom %>% 
   mutate(
-    sum_homicides = sum(n_obs),
-    test = broom::tidy(prop.test(n_obs, sum_homicides, conf.level = 0.95))
+    prop_estimate = baltimore_prop %>% pull(estimate),
+    conf_low = baltimore_prop %>% pull(conf.low),
+    conf_high = baltimore_prop %>% pull(conf.high)
   )
+
+baltimore_hom %>% 
+  knitr::kable(digits = 3)
 ```
 
 
-#### Estimating Proportions of Unsolved Homicides: Running `prop.test` for each city
+
+
+
+Still working on these sections:
+
+#### Estimating Proportions of unsolved homicides: Running `prop.test` for each city
 
 Now run `prop.test` for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of `purrr::map`, `purrr::map2`, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 
 ```{r}
-# unsolved_prop = function(df) {
+# unsolved_prop_func = function(df) {
 #   
-#   unsolved_hom <- homicide_summ %>%
-#   mutate(
-#     sum_homicides = sum(n_obs),
-#     test = broom::tidy(prop.test(n_obs, sum_homicides, conf.level = 0.95))
-#   )
-#   
-# }
+#   prop.test(
+#       x = homicide_summary %>% 
+#         pull(n_unsolved), 
+#       n = homicide_summary %>% 
+#         pull(n_homs)
+#   ) %>% 
+#   broom::tidy()
 # 
-# test_df <- homicide_summ %>% 
-#   map(., unsolved_prop) %>% 
-#   tidyr::unnest(test_df)
-
+# }
+#   
+#   baltimore_hom %>% 
+#     mutate(
+#       prop_estimate = baltimore_prop %>% pull(estimate),
+#       conf_low = baltimore_prop %>% pull(conf.low),
+#       conf_high = baltimore_prop %>% pull(conf.high)
+#     )
+# 
+# unsolved_homs <- 
+#   homicide_summary %>% 
+#   nest(df = -city_state) %>% 
+#   mutate(
+#     results = map(.x = df, 
+#                   prop.test(
+#                     x = homicide_summary %>% pull(n_unsolved),
+#                     n = homicide_summary %>% pull(n_homs)),
+#                   data = .x)
+#   ) %>% 
+#   select(city_state, results) %>% 
+#   unnest(results)
 
 ```
 
 
-#### Plot of Unsolved Homicide Proportions and Confidence Intervals Across the U.S.
+#### Plot of unsolved homicide proportions and confidence intervals for each city
 
 Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
 
