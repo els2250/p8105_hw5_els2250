@@ -18,7 +18,7 @@ library(rvest)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
-  fig.width = 6,
+  fig.width = 8,
   fig.asp = .6,
   out.width = "90%"
 )
@@ -95,7 +95,7 @@ There is no missing data except for `r sum(is.na(homicide_df$lat))` missing valu
 
 ### Summarizing total number of homicides and number of unsolved homicides
 
-To summarize the homicide data, we will generate a new variable (`city_state`) and count the total number of homicides reported in each city, as well as the number of unsolved homicides, determined by the `disposition` variable claimingn "Closed without arrest" or "Open/No arrest". 
+To summarize the homicide data, we will generate a new variable (`city_state`) and count the total number of homicides reported in each city, as well as the number of unsolved homicides, determined by the `disposition` variable (i.e., "Closed without arrest" or "Open/No arrest"). 
 
 ```{r}
 homicide_summary <- 
@@ -137,10 +137,10 @@ baltimore_prop %>%
                col.names = c("Estimate", "Lower CI", "Upper CI"))
 ```
 
-The above dataset (`baltimore_prop`) depicts the proportion of unsolved homicides in Baltimore, MD in addition to the estimate's upper and lower limit of the 95% confidence interval. 
+The above dataset (`baltimore_prop`) depicts the proportion of unsolved homicides in Baltimore, MD in addition to the estimate's upper and lower limit of the 95% confidence interval. The proportion of unsolved homicides in Baltimore is `r round(baltimore_prop$estimate, 3)` (95% CI: `r round(baltimore_prop$conf.low, 3)`-`r round(baltimore_prop$conf.high, 3)`). 
 
 
-### Estimating Proportions of unsolved homicides: Running `prop.test` for each city
+### Estimating Proportions of unsolved homicides: Running `prop.test` by city
 
 ```{r}
 city_state_hom_prop <- homicide_summary %>% 
@@ -163,7 +163,7 @@ city_state_hom_prop %>%
 The above dataset (`city_state_hom_prop`) depicts the estimated proportion of unsolved homicides, as well as each estimate's 95% confidence interval for each city. By arranging the dataset in descending order, it is apparent that Chicago, IL has the highest proportion of unsolved homicides, followed by New Orleans, LA and Baltimore, MD.  
 
 
-### Plot of unsolved homicide proportions and confidence intervals for each city
+### Plot of unsolved homicide proportions and confidence intervals by city
 
 ```{r}
 city_state_hom_prop %>% 
