@@ -157,7 +157,7 @@ city_state_hom_prop <- homicide_summary %>%
 city_state_hom_prop %>% 
   knitr::kable(digits = 3, 
                col.names = c("City, State", "Estimate", "Lower CI", "Upper CI"), 
-               caption = "Estimated Proportion and Confidence Intervals (CI) for Unsolved Homicides across the United States (in descending order)")
+               label = "Estimated Proportion and Confidence Intervals (CI) for Unsolved Homicides across the United States (in descending order)")
 ```
 
 
