@@ -90,7 +90,7 @@ skimr::skim(homicide_df)
 
 **Summary of Dataset**: The above dataset (`homicide_df`) consists of `r nrow(homicide_df)` observations and `r ncol(homicide_df)` variables. The dataset details case information, such as case ID (`uid`) and the date the homicide was reported (`reported_date`). Additionally, information related to the victim (`victim_last`, `victim_first`, `victim_race`, `victim_age`, `victim_sex`) is detailed, as well as the location of the homicide (`city`, `state`, `lat`, `lon`). Lastly, a categorical variable (`disposition`) consists of three levels to detail the results of the homicide (i.e., "Closed without arrest", "Closed with arrest", and "Open/No arrest"). There is no missing data except for `r sum(is.na(homicide_df$lat))` missing values in `lat` and `r sum(is.na(homicide_df$lat))` missing values in `lon`. 
 
-It's important to note that there are `r unique(homicide_df$city)` cities depicted in the dataset currently, rather than the 50 that were indicated originally. This discrepancy is most likely related to the city Tulsa being listed in two states (Alabama and Oklahoma). There is only one homicide reported for Tulsa, AL, which suggests that this entry was a data entry error. Since we don't want to make any assumptions regarding the homicidal data, Tulsa, AL will be removed from the dataframe for further analysis. 
+It's important to note that there are 51 cities depicted in the dataset currently, rather than the 50 that were indicated originally. This discrepancy is most likely related to the city Tulsa being listed in two states (Alabama and Oklahoma). There is only one homicide reported for Tulsa, AL, which suggests that this entry was a data entry error. Since we don't want to make any assumptions regarding the homicidal data, Tulsa, AL will be removed from future analyses. 
 
 
 ### Summarizing total number of homicides and number of unsolved homicides
@@ -181,7 +181,7 @@ city_state_hom_prop %>%
   ) + 
   theme(plot.title = element_text(hjust = 0.5),
         axis.text.x = element_text(angle = 60, hjust = 1),
-        legend.title = element_blank())
+        legend.position = 'right')
 ```
 
 The above plot demonstrates the estimated proportion of unsolved homicides in each city, with its corresponding confidence interval demonstrated using error bars. As noted in previous analyses, Chicago, IL has the highest proportion of unsolved homicides, while Tulsa, AL has the lowest proportion. 
@@ -267,7 +267,6 @@ problem_3_df %>%
   ) %>% 
   ggplot(aes(x = mu, y = power)) + 
   geom_point() +
-  geom_smooth(size = 0.5, color = "black", se = FALSE) + 
   labs(
     title = "Proportion of Times the Null is Rejected \n vs. True Value of Mu",
     x = "True value of mu",
